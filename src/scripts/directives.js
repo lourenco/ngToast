@@ -59,8 +59,8 @@
         };
       }
     ])
-    .directive('toastMessage', ['$timeout', '$compile', 'ngToast',
-      function($timeout, $compile, ngToast) {
+    .directive('toastMessage', ['$interval', '$compile', 'ngToast',
+      function($interval, $compile, ngToast) {
         return {
           replace: true,
           transclude: true,
@@ -81,20 +81,21 @@
             var dismissTimeout;
             var scopeToBind = scope.message.compileContent;
 
-            scope.cancelTimeout = function() {
-              $timeout.cancel(dismissTimeout);
+            scope.cancelInterval = function() {
+              $interval.cancel(dismissTimeout);
             };
 
             scope.startTimeout = function() {
               if (scope.message.dismissOnTimeout) {
-                dismissTimeout = $timeout(function() {
+                dismissTimeout = $interval(function() {
                   ngToast.dismiss(scope.message.id);
+                  scope.cancelInterval();
                 }, scope.message.timeout);
               }
             };
 
             scope.onMouseEnter = function() {
-              scope.cancelTimeout();
+              scope.cancelInterval();
             };
 
             scope.onMouseLeave = function() {
@@ -109,7 +110,7 @@
                 element.children().append(transcludedEl);
               });
 
-              $timeout(function() {
+              $interval(function() {
                 $compile(transcludedEl.contents())
                   (typeof scopeToBind === 'boolean' ?
                     scope.$parent : scopeToBind, function(compiledClone) {
